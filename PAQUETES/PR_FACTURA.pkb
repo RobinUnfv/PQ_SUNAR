@@ -2098,26 +2098,15 @@ END CREAR_ARCHIVO_SFS;
      pDescrip IN FACTU.T_RESUMEN_DIARIO.DESCRIPCION%TYPE
    ) IS
    
-    nCorrResDia NUMBER;
+    cCorrResDia VARCHAR2(5);
    
    BEGIN
-     
-      BEGIN
-        SELECT COUNT(FEC_EMISION)
-        INTO nCorrResDia
-        FROM FACTU.T_RESUMEN_DIARIO
-        WHERE NO_CIA = pNoCia
-        AND FEC_EMISION = pFecEmisor;
-      EXCEPTION
-        WHEN OTHERS THEN
-          nCorrResDia := 0;
-      END;
       
-      nCorrResDia := nCorrResDia + 1;
+      cCorrResDia := GET_CORRE_RESDIA(pNoCia, pFecEmisor);
       
       INSERT INTO FACTU.T_RESUMEN_DIARIO( NO_CIA, FEC_EMISION, NRO_CORRELATIVO, RUC_EMISOR,
                                           TICKET, DESCRIPCION )
-                                         VALUES (pNoCia, pFecEmisor, TO_CHAR(nCorrResDia), pRucEmisor,
+                                         VALUES (pNoCia, pFecEmisor, cCorrResDia, pRucEmisor,
                                            pTicket, pDescrip );
                                           
       COMMIT;                                          
