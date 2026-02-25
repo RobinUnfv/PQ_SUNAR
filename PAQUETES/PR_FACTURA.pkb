@@ -1974,7 +1974,8 @@ END CREAR_ARCHIVO_SFS;
 
    Log de Cambios:
      Fecha        Autor                     Descripción
-     04/02/2026   Robinzon Santana          Creador   
+     04/02/2026   Robinzon Santana          Creador
+     25/02/2026   Robinzon Santana          <R-01> Actualizando el estado sin el tipo de documento
   -----------------------------------------------------------------------------------------*/
   PROCEDURE ACTU_ESTADO_ENVIO(
             P_NO_CIA IN FACTU.ARFAFE.NO_CIA%TYPE,
@@ -1994,7 +1995,7 @@ END CREAR_ARCHIVO_SFS;
          SET PROCE_STATUS = P_PROC_STATUS,
              PROCE_FECHA = SYSDATE
          WHERE NO_CIA = P_NO_CIA
-         AND TIPO_DOC = P_TIPO_DOC
+         -- <R-01> AND TIPO_DOC = P_TIPO_DOC
          AND NO_FACTU = P_NO_FACTU;
          
          COMMIT;
@@ -2148,34 +2149,6 @@ END CREAR_ARCHIVO_SFS;
        RETURN '0';
   
   END GET_CORRE_RESDIA;
-  
-   /*---------------------------------------------------------------------------------------
-   Nombre      : ACTU_ESTADO_RESDIA
-   Proposito   : PROCEDIMIENTO QUE NOS PERMITA CAMBIAR EL ESTADO EN FACTU.ARFAFE A (R) RESUMEN DIARIO
-   Parametro  :
-
-   Log de Cambios:
-     Fecha        Autor                     Descripción
-     24/02/2026   Robinzon Santana          Creador   
- -----------------------------------------------------------------------------------------*/
-  PROCEDURE ACTU_ESTADO_RESDIA(pNoCia IN FACTU.ARFAFE.NO_CIA%TYPE,
-                               pNoFactu IN FACTU.ARFAFE.NO_FACTU%TYPE,
-                               pFecEmisor IN FACTU.ARFAFE.FECHA%TYPE,
-                               --pCorre IN FACTU.T_RESUMEN_DIARIO.NRO_CORRELATIVO%TYPE,
-                               pTicket IN FACTU.T_RESUMEN_DIARIO.TICKET%TYPE,
-                               pDescrip IN FACTU.T_RESUMEN_DIARIO.DESCRIPCION%TYPE)
-  IS
-  
-  BEGIN
-     UPDATE FACTU.ARFAFE SET PROCE_STATUS = 'R', PROCE_FECHA = SYSDATE
-     WHERE NO_CIA = pNoCia
-     AND NO_FACTU = pNoFactu;
-     
-     COMMIT;
-     
-     REG_RESUM_DIARIO(pNoCia, pFecEmisor, 'E', NULL, pTicket, pDescrip );
-     
-  END ACTU_ESTADO_RESDIA;
    
 END PR_FACTURA;
 /
