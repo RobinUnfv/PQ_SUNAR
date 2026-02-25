@@ -2071,7 +2071,8 @@ END CREAR_ARCHIVO_SFS;
                                               pCodMotivo, pDescMotivo, cNroCorre);
                                               
          UPDATE FACTU.ARFAFE
-         SET ESTADO = 'A'
+         SET ESTADO = 'A',
+             PROCE_STATUS = 'N'
          WHERE NO_CIA = pNoCia
          AND NO_FACTU = pNoFactu;
          
@@ -2093,6 +2094,7 @@ END CREAR_ARCHIVO_SFS;
   PROCEDURE REG_RESUM_DIARIO(
      pNoCia IN FACTU.T_RESUMEN_DIARIO.NO_CIA%TYPE,
      pFecEmisor IN FACTU.T_RESUMEN_DIARIO.FEC_EMISION%TYPE,
+     pEstado IN FACTU.T_RESUMEN_DIARIO.ESTADO%TYPE,
      pRucEmisor IN FACTU.T_RESUMEN_DIARIO.RUC_EMISOR%TYPE,
      pTicket  IN FACTU.T_RESUMEN_DIARIO.TICKET%TYPE,
      pDescrip IN FACTU.T_RESUMEN_DIARIO.DESCRIPCION%TYPE
@@ -2105,9 +2107,9 @@ END CREAR_ARCHIVO_SFS;
       cCorrResDia := GET_CORRE_RESDIA(pNoCia, pFecEmisor);
       
       INSERT INTO FACTU.T_RESUMEN_DIARIO( NO_CIA, FEC_EMISION, NRO_CORRELATIVO, RUC_EMISOR,
-                                          TICKET, DESCRIPCION )
+                                          TICKET, DESCRIPCION, ESTADO )
                                          VALUES (pNoCia, pFecEmisor, cCorrResDia, pRucEmisor,
-                                           pTicket, pDescrip );
+                                           pTicket, pDescrip, pEstado );
                                           
       COMMIT;                                          
      
@@ -2146,6 +2148,34 @@ END CREAR_ARCHIVO_SFS;
        RETURN '0';
   
   END GET_CORRE_RESDIA;
+  
+   /*---------------------------------------------------------------------------------------
+   Nombre      : ACTU_ESTADO_RESDIA
+   Proposito   : PROCEDIMIENTO QUE NOS PERMITA CAMBIAR EL ESTADO EN FACTU.ARFAFE A (R) RESUMEN DIARIO
+   Parametro  :
+
+   Log de Cambios:
+     Fecha        Autor                     Descripción
+     24/02/2026   Robinzon Santana          Creador   
+ -----------------------------------------------------------------------------------------*/
+  PROCEDURE ACTU_ESTADO_RESDIA(pNoCia IN FACTU.ARFAFE.NO_CIA%TYPE,
+                               pNoFactu IN FACTU.ARFAFE.NO_FACTU%TYPE,
+                               pFecEmisor IN FACTU.ARFAFE.FECHA%TYPE,
+                               --pCorre IN FACTU.T_RESUMEN_DIARIO.NRO_CORRELATIVO%TYPE,
+                               pTicket IN FACTU.T_RESUMEN_DIARIO.TICKET%TYPE,
+                               pDescrip IN FACTU.T_RESUMEN_DIARIO.DESCRIPCION%TYPE)
+  IS
+  
+  BEGIN
+     UPDATE FACTU.ARFAFE SET PROCE_STATUS = 'R', PROCE_FECHA = SYSDATE
+     WHERE NO_CIA = pNoCia
+     AND NO_FACTU = pNoFactu;
+     
+     COMMIT;
+     
+     REG_RESUM_DIARIO(pNoCia, pFecEmisor, 'E', NULL, pTicket, pDescrip );
+     
+  END ACTU_ESTADO_RESDIA;
    
 END PR_FACTURA;
 /
