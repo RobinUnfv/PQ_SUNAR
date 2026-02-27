@@ -1974,7 +1974,8 @@ END CREAR_ARCHIVO_SFS;
 
    Log de Cambios:
      Fecha        Autor                     Descripción
-     04/02/2026   Robinzon Santana          Creador   
+     04/02/2026   Robinzon Santana          Creador
+     25/02/2026   Robinzon Santana          <R-01> Actualizando el estado sin el tipo de documento
   -----------------------------------------------------------------------------------------*/
   PROCEDURE ACTU_ESTADO_ENVIO(
             P_NO_CIA IN FACTU.ARFAFE.NO_CIA%TYPE,
@@ -1994,7 +1995,7 @@ END CREAR_ARCHIVO_SFS;
          SET PROCE_STATUS = P_PROC_STATUS,
              PROCE_FECHA = SYSDATE
          WHERE NO_CIA = P_NO_CIA
-         AND TIPO_DOC = P_TIPO_DOC
+         -- <R-01> AND TIPO_DOC = P_TIPO_DOC
          AND NO_FACTU = P_NO_FACTU;
          
          COMMIT;
@@ -2071,7 +2072,8 @@ END CREAR_ARCHIVO_SFS;
                                               pCodMotivo, pDescMotivo, cNroCorre);
                                               
          UPDATE FACTU.ARFAFE
-         SET ESTADO = 'A'
+         SET ESTADO = 'A',
+             PROCE_STATUS = 'N'
          WHERE NO_CIA = pNoCia
          AND NO_FACTU = pNoFactu;
          
@@ -2093,6 +2095,7 @@ END CREAR_ARCHIVO_SFS;
   PROCEDURE REG_RESUM_DIARIO(
      pNoCia IN FACTU.T_RESUMEN_DIARIO.NO_CIA%TYPE,
      pFecEmisor IN FACTU.T_RESUMEN_DIARIO.FEC_EMISION%TYPE,
+     pEstado IN FACTU.T_RESUMEN_DIARIO.ESTADO%TYPE,
      pRucEmisor IN FACTU.T_RESUMEN_DIARIO.RUC_EMISOR%TYPE,
      pTicket  IN FACTU.T_RESUMEN_DIARIO.TICKET%TYPE,
      pDescrip IN FACTU.T_RESUMEN_DIARIO.DESCRIPCION%TYPE
@@ -2105,9 +2108,9 @@ END CREAR_ARCHIVO_SFS;
       cCorrResDia := GET_CORRE_RESDIA(pNoCia, pFecEmisor);
       
       INSERT INTO FACTU.T_RESUMEN_DIARIO( NO_CIA, FEC_EMISION, NRO_CORRELATIVO, RUC_EMISOR,
-                                          TICKET, DESCRIPCION )
+                                          TICKET, DESCRIPCION, ESTADO )
                                          VALUES (pNoCia, pFecEmisor, cCorrResDia, pRucEmisor,
-                                           pTicket, pDescrip );
+                                           pTicket, pDescrip, pEstado );
                                           
       COMMIT;                                          
      
