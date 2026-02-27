@@ -2090,13 +2090,14 @@ END CREAR_ARCHIVO_SFS;
 
    Log de Cambios:
      Fecha        Autor                     Descripción
-     23/02/2026   Robinzon Santana          Creador   
+     23/02/2026   Robinzon Santana          Creador
+     27/02/2026   Robinzon Santana          <R-R002> Quitando columna de RUC emisior   
  -----------------------------------------------------------------------------------------*/
   PROCEDURE REG_RESUM_DIARIO(
      pNoCia IN FACTU.T_RESUMEN_DIARIO.NO_CIA%TYPE,
      pFecEmisor IN FACTU.T_RESUMEN_DIARIO.FEC_EMISION%TYPE,
      pEstado IN FACTU.T_RESUMEN_DIARIO.ESTADO%TYPE,
-     pRucEmisor IN FACTU.T_RESUMEN_DIARIO.RUC_EMISOR%TYPE,
+     -- <R-R002> pRucEmisor IN FACTU.T_RESUMEN_DIARIO.RUC_EMISOR%TYPE,
      pTicket  IN FACTU.T_RESUMEN_DIARIO.TICKET%TYPE,
      pDescrip IN FACTU.T_RESUMEN_DIARIO.DESCRIPCION%TYPE
    ) IS
@@ -2107,9 +2108,9 @@ END CREAR_ARCHIVO_SFS;
       
       cCorrResDia := GET_CORRE_RESDIA(pNoCia, pFecEmisor);
       
-      INSERT INTO FACTU.T_RESUMEN_DIARIO( NO_CIA, FEC_EMISION, NRO_CORRELATIVO, RUC_EMISOR,
+      INSERT INTO FACTU.T_RESUMEN_DIARIO( NO_CIA, FEC_EMISION, NRO_CORRELATIVO, -- <R-R002> RUC_EMISOR,
                                           TICKET, DESCRIPCION, ESTADO )
-                                         VALUES (pNoCia, pFecEmisor, cCorrResDia, pRucEmisor,
+                                         VALUES (pNoCia, pFecEmisor, cCorrResDia, -- <R-R002> pRucEmisor,
                                            pTicket, pDescrip, pEstado );
                                           
       COMMIT;                                          
