@@ -1,0 +1,37 @@
+CREATE OR REPLACE PACKAGE FACTU.PR_COMPROBANTE_PAGO IS
+
+  --  Procedimiento que devuelve el XML de resultado del proceso
+  PROCEDURE SET_XML_OUT(
+            p_cNoCia IN FACTU.ARPFOE.NO_CIA%TYPE,
+            p_cNoCliente IN FACTU.ARPFOE.NO_CLIENTE%TYPE,
+            p_cNoOrden IN FACTU.ARPFOE.NO_ORDEN%TYPE,
+            p_cNoGuia IN FACTU.ARPFFE.NO_GUIA%TYPE,
+            p_cNoFactu IN FACTU.ARFAFE.NO_FACTU%TYPE,
+            p_dFecha IN FACTU.ARFAFE.FECHA%TYPE,
+            p_cError IN VARCHAR2,
+            p_cXMLError IN XMLTYPE,
+            P_cXMLOut OUT NOCOPY CLOB
+          );
+  
+  -- PROCESO QUE NOS PERMITE OBTENER EL ARRAY DE EMISION COMPROBANTE DE PAGO
+  PROCEDURE SET_TDU_EMI_CP(p_cTag IN VARCHAR2, 
+                           p_cXmlInput IN CLOB,
+                           p_tEmiCp OUT FACTU.TDU_TABLA_EMI_CP
+                           );
+
+  -- PROCESO PARA EMITIR UN COMPROBANTE PAGO(BOLETA O FACTURA)
+  PROCEDURE EMISION_COMPRO_PAGO(p_cXmlInput IN CLOB, 
+                                p_cXmlOutput IN OUT NOCOPY CLOB);
+  
+  -- PROCESO QUE NOS PERMITE CREAR UNA FACTURA O BOLETA DE UN PEDIDO
+  PROCEDURE EMISION_BOLETA_FACTURA(
+    p_cNoCia IN FACTU.ARPFOE.NO_CIA%TYPE,
+    p_cNoOrden IN FACTU.ARPFOE.NO_ORDEN%TYPE,
+    p_cNoCliente IN FACTU.ARFAFE.NO_CLIENTE%TYPE,
+    p_cTipoDoc IN FACTU.ARFAFE.TIPO_DOC%TYPE,
+  --  p_cTipoCliente IN FACTU.ARFAFE.TIPO_CLIENTE%TYPE,
+    p_cError IN OUT VARCHAR2
+  );
+
+END PR_COMPROBANTE_PAGO;
+/
