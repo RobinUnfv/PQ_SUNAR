@@ -136,7 +136,7 @@ CREATE OR REPLACE PACKAGE BODY FACTU.PR_COMPROBANTE_PAGO IS
   Log de Cambios
     Fecha         Autor                      Descripción
      06/10/2024   Robinzon Santana           Creacion
-     27/02/2026   Robinzon Santana           <R-002> Agregando condicion para tipo de documento de venta
+     03/03/2026   ROBINZON SANTANA           <RR4-01> Modificación el tipo para aceptar nota de venta
   ----------------------------------------------------------------------------*/
   PROCEDURE EMISION_COMPRO_PAGO(p_cXmlInput IN CLOB, p_cXmlOutput IN OUT NOCOPY CLOB) IS
     
@@ -178,7 +178,6 @@ CREATE OR REPLACE PACKAGE BODY FACTU.PR_COMPROBANTE_PAGO IS
     
     FACTU.PR_PEDIDO.SET_TDU_ARPFOE(kcTag, p_cXmlInput, cError, tArpfoe,cNoOrden);
     
-    DBMS_OUTPUT.PUT_LINE('>>>>> I PEDIDO');  
     -- PEDIDO
     IF cError = '0,OK' THEN
     
@@ -227,39 +226,37 @@ CREATE OR REPLACE PACKAGE BODY FACTU.PR_COMPROBANTE_PAGO IS
         END IF;        
                                 
     END IF;
-    DBMS_OUTPUT.PUT_LINE('>>>>> F PEDIDO'); 
     
     -- GUIA FICTA
-    DBMS_OUTPUT.PUT_LINE('>>>>> I GUIA FICTA'); 
     IF cError = '0,OK' THEN
        FACTU.PR_GUIA.GUARDAR_GUIA_FICTA(cNoCia, cNoOrden, cNoGuia, nNoDocu, cError );
        DBMS_OUTPUT.PUT_LINE('cNoCia = '||cNoCia||' , cNoCliente = '||cNoCliente||' , cNoOrden = '||cNoOrden||' , cNoGuia = '||cNoGuia);
     END IF;
-    DBMS_OUTPUT.PUT_LINE('>>>>> F GUIA FICTA'); 
     DBMS_OUTPUT.PUT_LINE(cError);
     -- FACTURA O BOLETA
     IF cError = '0,OK' THEN
        
        FACTU.PR_COMPROBANTE_PAGO.SET_TDU_EMI_CP(kcTag, p_cXmlInput,tEmiCp);
-       -- <I R-002>
+       
        FOR i IN 1..tEmiCp.Count LOOP
           cTipoDoc := tEmiCp(i).tipoDoc;
        END LOOP;
        
-       IF NVL(cTipoDoc,'X') IN('F','B') THEN
+       -- <RR4-01> IF NVL(cTipoDoc,'X') IN('F','B') THEN
+       IF NVL(cTipoDoc,'X') IN('F','B', 'NV') THEN
            FACTU.PR_FACTURA.GUARDAR(cNoCia, cNoOrden, cNoGuia, nNoDocu, tEmiCp, cNoFactu, cError );
        
            IF cError = '0,OK' THEN
            
               cTipoDoc := SUBSTR(cNoFactu,1,1);
               cSerie := SUBSTR(cNoFactu,1,4);
+
               FACTU.PR_DOCUMENTO.ACTUALIZAR_CORRELATIVO(cNoCia,cCentro,cTipoDoc, cSerie,  nConsDesde,cError, l_xml_Error0);
               -- ARCHIVO PLANO SUNAT           
-              -- <R-002> FACTU.PR_FACTURA.CREAR_ARCHIVO_SFS(cNoCia, cTipoDoc, cNoFactu);
+              --FACTU.PR_FACTURA.CREAR_ARCHIVO_SFS(cNoCia, cTipoDoc, cNoFactu);
                                                                                   
            END IF;
        END IF;
-       -- <F R-002>
        
     END IF;
      
@@ -400,8 +397,7 @@ CREATE OR REPLACE PACKAGE BODY FACTU.PR_COMPROBANTE_PAGO IS
     ELSE   
        ROLLBACK;
     END IF;
-    
-    
+
   END EMISION_BOLETA_FACTURA;
   
 END PR_COMPROBANTE_PAGO;
