@@ -248,7 +248,7 @@ CREATE OR REPLACE PACKAGE BODY FACTU.PR_COMPROBANTE_PAGO IS
        
            IF cError = '0,OK' THEN
            
-              cTipoDoc := SUBSTR(cNoFactu,1,1);
+              -- <RR4-01> cTipoDoc := SUBSTR(cNoFactu,1,1);
               cSerie := SUBSTR(cNoFactu,1,4);
 
               FACTU.PR_DOCUMENTO.ACTUALIZAR_CORRELATIVO(cNoCia,cCentro,cTipoDoc, cSerie,  nConsDesde,cError, l_xml_Error0);
