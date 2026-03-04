@@ -195,8 +195,7 @@ CREATE OR REPLACE PACKAGE BODY FACTU.PR_DOCUMENTO IS
     
   BEGIN
     
-   -- <RR4-01> IF p_cTipoDoc = 'P' THEN
-   IF p_cTipoDoc IN('P','NV') THEN
+   IF p_cTipoDoc = 'P' THEN
         BEGIN
             SELECT SERIE||LPAD(TO_CHAR(NVL(TO_NUMBER(cons_desde) + 1,0)),7,'0')
             INTO cNoOrden
@@ -214,11 +213,29 @@ CREATE OR REPLACE PACKAGE BODY FACTU.PR_DOCUMENTO IS
                           p_cCentro||' , TIPO DOC. = '||p_cTipoDoc||' , ACTIVO = '||kEstadoSerie;
           WHEN OTHERS THEN
               p_cError := '1,HUBO UN ERROR PARA OBTENER LA SERIE, CIA = '||p_cNoCia||' , CENTRO = '||
-                          p_cCentro||' , TIPO DOC. = '||p_cTipoDoc||' , ACTIVO = '||kEstadoSerie;
+                          p_cCentro||' , TIPO_DOC = '||p_cTipoDoc||' , ACTIVO = '||kEstadoSerie;
         END;
-        DBMS_OUTPUT.Put_Line(' PEDIDO = '||cNoOrden);
+
         RETURN cNoOrden;
-        
+    -- <I RR4-01>    
+    ELSIF p_cTipoDoc = 'NV' THEN
+        BEGIN
+            SELECT SERIE||LPAD(TO_CHAR(NVL(TO_NUMBER(cons_desde) + 1,0)),7,'0')
+            INTO cNoFactu
+            FROM FACTU.ARFACC
+            WHERE NO_CIA = p_cNoCia
+            AND CENTRO   = p_cCentro
+            AND TIPO_DOC = p_cTipoDoc
+            AND ACTIVO   = kEstadoSerie;
+        EXCEPTION
+          WHEN OTHERS THEN
+              p_cError := '1,HUBO UN ERROR PARA OBTENER LA SERIE DE NOTA DE VENTA, CIA = '||p_cNoCia||' , CENTRO = '||
+                          p_cCentro||' , TIPO_DOC = '||p_cTipoDoc||' , ACTIVO = '||kEstadoSerie;
+        END;
+
+        RETURN cNoFactu;
+    
+    -- <F RR4-01>        
     ELSIF p_cTipoDoc IN('B','F') THEN
         
         IF p_cTipoDoc = 'B' THEN
@@ -256,4 +273,3 @@ CREATE OR REPLACE PACKAGE BODY FACTU.PR_DOCUMENTO IS
   
 
 END PR_DOCUMENTO;
-/
