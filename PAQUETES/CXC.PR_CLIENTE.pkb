@@ -224,12 +224,12 @@ CREATE OR REPLACE PACKAGE BODY CXC.PR_CLIENTE IS
   IS
      
      kIsNulo CONSTANT CHAR(1) := 'S';
-     /*
+     
      nPosDepa   NUMBER;
      nPosProv   NUMBER;
      nPosDist   NUMBER;
-     */
-     cDireccion FACTU.SUCURSAL_PTOVTA.DIRECCION%TYPE;
+     
+     cDireccion CXC.ARCCTDA.DIRECCION%TYPE;
      cDescDepa CXC.ARCCDP.DESC_DEPA%TYPE;
      cDescProv CXC.ARCCPR.DESC_PROV%TYPE;
      cDescDist CXC.ARCCDI.DESC_DIST%TYPE;
@@ -262,7 +262,7 @@ CREATE OR REPLACE PACKAGE BODY CXC.PR_CLIENTE IS
          RETURN cDireccion;
       END IF;
     cDireccion := cDireccion || ' ' || UPPER(cDescDepa)|| ' - ' || UPPER(cDescProv)|| ' - ' || UPPER(cDescDist);
-    /*
+    
        -- DEPARTAMENTO
     IF cDescDepa IS NOT NULL AND INSTR(cDireccion, UPPER(cDescDepa)) = 0 THEN
         cDireccion := cDireccion || ' ' || UPPER(cDescDepa)|| ' - ' || UPPER(cDescProv)|| ' - ' || UPPER(cDescDist);
@@ -273,8 +273,6 @@ CREATE OR REPLACE PACKAGE BODY CXC.PR_CLIENTE IS
     nPosProv := INSTR(cDireccion, UPPER(cDescProv));
     nPosDist := INSTR(cDireccion, UPPER(cDescDist));
     
-    DBMS_OUTPUT.put_line('NO_CLIENTE = '||p_cNoCliente||' ; nPosDepa = '||nPosDepa||'  ,  nPosProv = '||nPosProv|| ' , nPosDist = '||nPosDist);
-    
     IF nPosDepa > 0 THEN
         DBMS_OUTPUT.put_line('SE ENCONTRO cDescDepa => nPosDepa = '||nPosDepa||'  ,  cDescDepa ='||cDescDepa);
         cDireccion := TRIM( SUBSTR(cDireccion, 1, nPosDepa - 1) );
@@ -282,7 +280,7 @@ CREATE OR REPLACE PACKAGE BODY CXC.PR_CLIENTE IS
         cDireccion := cDireccion||' '|| UPPER(cDescDepa)|| ' - ' || UPPER(cDescProv)|| ' - ' || UPPER(cDescDist);
         RETURN cDireccion;
     END IF;
-    */
+    
      
     RETURN cDireccion;
       
