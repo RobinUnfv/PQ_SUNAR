@@ -2275,6 +2275,26 @@ BEGIN
       when others Then
          ROLLBACK;
    END REGISTRO_VENTA;
+   
+ /*---------------------------------------------------------------------------------------
+   Nombre      : LIMPIAR_REGVTA
+   Proposito   : PROCEDIMIENTO QUE NOS PERMITA LIMPIAR LA TABLA DE REGISTRO DE VENTA (FACTU.REG_VTA)
+   Parametro  :
+
+   Log de Cambios:
+     Fecha        Autor                     Descripción
+     11/03/2026   Robinzon Santana          Creador   
+ -----------------------------------------------------------------------------------------*/
+  PROCEDURE LIMPIAR_REGVTA (pNoCia IN FACTU.ARFAFE.NO_CIA%TYPE) IS
     
+  BEGIN
+      DELETE FROM FACTU.REG_VTA
+      WHERE NO_CIA = pNoCia;
+      
+      COMMIT;
+  EXCEPTION
+    WHEN OTHERS THEN
+       ROLLBACK;
+  END LIMPIAR_REGVTA;
     
 END PR_FACTURA;
