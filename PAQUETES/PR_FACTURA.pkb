@@ -2160,7 +2160,7 @@ END CREAR_ARCHIVO_SFS;
      Fecha        Autor                     Descripción
      10/03/2026   Robinzon Santana          Creador   
  -----------------------------------------------------------------------------------------*/
-    PROCEDURE REGISTRO_VENTA (pNoCia IN VARCHAR2,dFecIni IN DATE,dFecFin IN DATE,pTipoDoc IN VARCHAR2,
+PROCEDURE REGISTRO_VENTA (pNoCia IN VARCHAR2,dFecIni IN DATE,dFecFin IN DATE,pTipoDoc IN VARCHAR2,
                            pMoneda IN VARCHAR2, pUser OUT VARCHAR2)
     IS
       cursor Ventas_x_Art is
@@ -2173,9 +2173,9 @@ END CREAR_ARCHIVO_SFS;
                e.fecha                 between dFecIni and dFecFin               and
                e.estado                in ('D','R','M','G','A')                    and
                E.TIPO_DOC              <> 'PF' and
-               e.tipo_doc              = nvl(pTipoDoc,e.tipo_doc)              	 and
+               e.tipo_doc              = nvl(pTipoDoc,e.tipo_doc)                 and
                r.no_cia                = e.no_cia                                  and
-               r.cod_doc               = e.tipo_doc                                    	
+               r.cod_doc               = e.tipo_doc                                      
         Group by e.no_cia,e.tipo_doc,r.cod_sunat,r.descripcion,e.no_cliente,e.no_cliente,e.nombre_digi, e.alias,
                e.nbr_cliente,e.fecha,e.no_factu,e.moneda,e.ind_anu_dev,e.tipo_cambio,e.estado,e.no_factu,e.tipo_obse,e.num_doc_cli,
                e.tipo_refe_factu, e.no_refe_factu, e.cod_fpago, e.tipo_doc_emp, e.num_doc_emp
@@ -2192,7 +2192,7 @@ END CREAR_ARCHIVO_SFS;
     cSunatRefe FACTU.ARFADOC.COD_SUNAT%TYPE;
     cCodFpago FACTU.ARFAFE.COD_FPAGO%TYPE;
 
-begin
+BEGIN
   
     wlinea:=0;
   
@@ -2256,7 +2256,7 @@ begin
          
          wlinea:= wlinea+1;
      
-         PROC_MOVI_CON_DET(a.no_cia,a.tipo_doc,a.no_factu,
+         FACTU.PROC_MOVI_CON_DET(a.no_cia,a.tipo_doc,a.no_factu,
                            pMoneda,a.cod_sunat,a.descripcion,
                            a.no_cliente,a.ruc,a.nbr_cliente,
                            a.fecha,a.moneda,a.ind_anu_dev,
@@ -2271,10 +2271,10 @@ begin
     commit;
     pUser := USER;
     
-   Exception
+   EXCEPTION
       when others Then
          ROLLBACK;
-    END REGISTRO_VENTA;
+   END REGISTRO_VENTA;
     
     
 END PR_FACTURA;
