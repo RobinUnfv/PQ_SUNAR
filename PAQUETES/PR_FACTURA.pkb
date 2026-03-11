@@ -2090,14 +2090,13 @@ END CREAR_ARCHIVO_SFS;
 
    Log de Cambios:
      Fecha        Autor                     Descripción
-     23/02/2026   Robinzon Santana          Creador
-     27/02/2026   Robinzon Santana          <R-R002> Quitando columna de RUC emisior   
+     23/02/2026   Robinzon Santana          Creador   
  -----------------------------------------------------------------------------------------*/
   PROCEDURE REG_RESUM_DIARIO(
      pNoCia IN FACTU.T_RESUMEN_DIARIO.NO_CIA%TYPE,
      pFecEmisor IN FACTU.T_RESUMEN_DIARIO.FEC_EMISION%TYPE,
      pEstado IN FACTU.T_RESUMEN_DIARIO.ESTADO%TYPE,
-     -- <R-R002> pRucEmisor IN FACTU.T_RESUMEN_DIARIO.RUC_EMISOR%TYPE,
+     pRucEmisor IN FACTU.T_RESUMEN_DIARIO.RUC_EMISOR%TYPE,
      pTicket  IN FACTU.T_RESUMEN_DIARIO.TICKET%TYPE,
      pDescrip IN FACTU.T_RESUMEN_DIARIO.DESCRIPCION%TYPE
    ) IS
@@ -2108,9 +2107,9 @@ END CREAR_ARCHIVO_SFS;
       
       cCorrResDia := GET_CORRE_RESDIA(pNoCia, pFecEmisor);
       
-      INSERT INTO FACTU.T_RESUMEN_DIARIO( NO_CIA, FEC_EMISION, NRO_CORRELATIVO, -- <R-R002> RUC_EMISOR,
+      INSERT INTO FACTU.T_RESUMEN_DIARIO( NO_CIA, FEC_EMISION, NRO_CORRELATIVO, RUC_EMISOR,
                                           TICKET, DESCRIPCION, ESTADO )
-                                         VALUES (pNoCia, pFecEmisor, cCorrResDia, -- <R-R002> pRucEmisor,
+                                         VALUES (pNoCia, pFecEmisor, cCorrResDia, pRucEmisor,
                                            pTicket, pDescrip, pEstado );
                                           
       COMMIT;                                          
@@ -2150,6 +2149,132 @@ END CREAR_ARCHIVO_SFS;
        RETURN '0';
   
   END GET_CORRE_RESDIA;
-   
+  
+   /*---------------------------------------------------------------------------------------
+   Nombre      : REGISTRO_VENTA
+   Proposito   : PROCEDIMIENTO QUE SE VA ENCARCAR DE REALIZAR LA CARGA DE TODOS LOS COMPROBANTES DE PAGO
+                 QUE NOS SERVIRA PARA EL REGISTRO DE VENTA DE UN MES DETERMINADO POR EL USUARIO
+   Parametro  :
+
+   Log de Cambios:
+     Fecha        Autor                     Descripción
+     10/03/2026   Robinzon Santana          Creador   
+ -----------------------------------------------------------------------------------------*/
+    PROCEDURE REGISTRO_VENTA (pNoCia IN VARCHAR2,dFecIni IN DATE,dFecFin IN DATE,pTipoDoc IN VARCHAR2,
+                           pMoneda IN VARCHAR2, pUser OUT VARCHAR2)
+    IS
+      cursor Ventas_x_Art is
+        Select e.no_cia,e.tipo_doc,r.cod_sunat,r.descripcion,e.no_cliente,  decode(f_ind_varios(pNoCia,e.no_cliente),'S', ' ', factu.f_ruc_cliente(e.no_cia,e.no_cliente)) as ruc,
+               decode(f_ind_varios(pNoCia,e.no_cliente),'S',nvl(e.nombre_digi,nvl(e.alias,e.nbr_cliente)),e.nbr_cliente) nbr_cliente,e.fecha,e.no_factu,
+               e.moneda,e.ind_anu_dev,e.tipo_cambio,e.estado,substr(e.no_factu,1,4) serie, substr(e.no_factu,5,7) Correlativo,e.tipo_obse,e.num_doc_cli,
+               e.tipo_refe_factu, e.no_refe_factu, e.cod_fpago, e.tipo_doc_emp, e.num_doc_emp
+        From   Arfafe e, Arfadoc r
+        Where  e.no_cia                = pNoCia                                   and
+               e.fecha                 between dFecIni and dFecFin               and
+               e.estado                in ('D','R','M','G','A')                    and
+               E.TIPO_DOC              <> 'PF' and
+               e.tipo_doc              = nvl(pTipoDoc,e.tipo_doc)              	 and
+               r.no_cia                = e.no_cia                                  and
+               r.cod_doc               = e.tipo_doc                                    	
+        Group by e.no_cia,e.tipo_doc,r.cod_sunat,r.descripcion,e.no_cliente,e.no_cliente,e.nombre_digi, e.alias,
+               e.nbr_cliente,e.fecha,e.no_factu,e.moneda,e.ind_anu_dev,e.tipo_cambio,e.estado,e.no_factu,e.tipo_obse,e.num_doc_cli,
+               e.tipo_refe_factu, e.no_refe_factu, e.cod_fpago, e.tipo_doc_emp, e.num_doc_emp
+        Order by r.cod_sunat,e.no_factu,e.fecha;
+        
+    cCia FACTU.ARFAFE.NO_CIA%TYPE;
+    dFEcha FACTU.ARFAFE.FECHA%TYPE;
+    cNoFactu FACTU.ARFAFE.NO_FACTU%TYPE;
+    cTipoDoc1 FACTU.ARFAFE.TIPO_DOC%TYPE; 
+    cTipoRefe FACTU.ARFAFE.TIPO_REFE_FACTU%TYPE;
+    cFactuRefe FACTU.ARFAFE.NO_REFE_FACTU%TYPE;
+    dFecVence FACTU.PLAZO_VENCFACTUR.fecha_VENCE%TYPE;    
+    WLINEA NUMBER(6);
+    cSunatRefe FACTU.ARFADOC.COD_SUNAT%TYPE;
+    cCodFpago FACTU.ARFAFE.COD_FPAGO%TYPE;
+
+begin
+  
+    wlinea:=0;
+  
+    For A In Ventas_x_Art Loop
+         cSunatRefe := NULL;
+         dFEcha := NULL;
+         
+         cCia:= A.NO_CIA;
+         cTipoDoc1 := A.TIPO_DOC;
+         cNoFactu := A.NO_FACTU;
+         cTipoRefe := A.TIPO_REFE_FACTU;
+         cFactuRefe := A.NO_REFE_FACTU;
+         cCodFpago :=A.COD_FPAGO;
+     
+         IF cTipoRefe IS NOT NULL THEN
+           BEGIN
+             SELECT COD_SUNAT INTO cSunatRefe 
+             FROM ARFADOC 
+             WHERE NO_CIA = cCia AND
+                   COD_DOC = cTipoRefe;
+             Exception  When no_data_found Then cSunatRefe:= null;      
+           END;
+         END IF;
+    
+         IF cTipoRefe <> 'L' THEN
+            begin
+               selecT fecha INTO dFEcha FROM ARFAFE
+               WHERE NO_CIA = cCia AND
+                     TIPO_DOC = cTipoRefe AND
+                     NO_FACTU = cFactuRefe; 
+               Exception  When no_data_found Then dFEcha:= null;
+            end;
+         ELSE
+          IF cTipoRefe = 'L' THEN
+
+            BEGIN
+              selecT fecha_DOC INTO dFEcha FROM ARCCTRD
+              WHERE NO_CIA = cCia AND
+                    TIPO_ACC = '1' AND
+                    COD_DOC = cTipoRefe AND
+                    NO_DOCU = cFactuRefe AND
+                    ESTADO_TRANS ='H' AND
+                    NRO_RENOV IS NULL;
+              Exception  When no_data_found Then dFEcha:= null;
+              END;
+             
+          END IF;
+         END IF;
+     
+         IF cTipoDoc1 IS NOT NULL THEN
+             begin
+                   selecT fecha_VENCE INTO dFecVence FROM PLAZO_VENCFACTUR
+                   WHERE NO_CIA = cCia AND
+                         TIPO_DOC = cTipoDoc1 AND
+                         NO_FACTU = cNoFactu AND
+                         NUM_CUOTA = 1; 
+                   Exception  When no_data_found Then dFecVence:= null;
+             end;
+            
+         END IF;       
+         
+         wlinea:= wlinea+1;
+     
+         PROC_MOVI_CON_DET(a.no_cia,a.tipo_doc,a.no_factu,
+                           pMoneda,a.cod_sunat,a.descripcion,
+                           a.no_cliente,a.ruc,a.nbr_cliente,
+                           a.fecha,a.moneda,a.ind_anu_dev,
+                           a.tipo_cambio,a.estado,a.serie,
+                           a.correlativo,a.tipo_obse,a.num_doc_cli,
+                           USER,a.tipo_refe_factu,a.no_refe_factu, 
+                           dFEcha, dFecVence, wlinea, 
+                           cSunatRefe, a.tipo_doc_emp, a.num_doc_emp);
+
+    End Loop;
+    
+    commit;
+    pUser := USER;
+    
+   Exception
+      when others Then
+         ROLLBACK;
+    END REGISTRO_VENTA;
+    
+    
 END PR_FACTURA;
-/
